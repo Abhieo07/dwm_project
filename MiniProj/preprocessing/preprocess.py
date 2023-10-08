@@ -38,6 +38,11 @@ class Cleaning:
         if self.df[column].head(1).dtype == object: # only str
             self.df[column] = self.df[column].str.replace(error_value, correct_value)
 
+    #This is out of line
+    def outliers(self):
+        z_scores = (self.df - self.df.mean()) / self.df.std()
+        self.df = self.df[(z_scores < 3).all(axis=1)]
+        
     # This will transform one column and also for categorizes the column 
     def transform(self):
         for self.column in self.df:
@@ -52,7 +57,3 @@ class Cleaning:
         le = LabelEncoder()
         self.df[categorical_column] = le.fit_transform(self.df[categorical_column])
 
-    #This is out of line
-    def outliers(self):
-        z_scores = (self.df - self.df.mean()) / self.df.std()
-        self.df = self.df[(z_scores < 3).all(axis=1)]
