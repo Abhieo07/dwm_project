@@ -6,6 +6,15 @@
     <title>Main</title>
 </head>
 <body>
-    <h1>Successfully added</h1>
+    <h1>Analyse your data here!!</h1>
+    <div>
+        <h2>{{ clean }}</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="file_">Upoload your data here</label>
+            <input id="file_" type="file" name='uploaded-file' accept=".csv, .json, .xlsx"/>
+            <input type="submit" value="Upload">
+        </form>
+    </div>
 </body>
 </html>
