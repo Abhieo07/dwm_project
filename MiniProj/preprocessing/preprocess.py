@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
+from scipy import stats
 
 class Cleaning:
-
     def __init__(self,file):
         try:
             if str(file).endswith('.csv'):
@@ -14,24 +14,28 @@ class Cleaning:
                 self.df = pd.read_excel(file)
             else:
                 raise TypeError("Invaid file format")
+            
+            self.clean()
+            self.outliers()
+            self.transform()
+            self.categorical()
+
+            
+
         except Exception as e:
             f'An error ocuured {str(e)}'
 
     def clean(self):
-
         self.missing_values = self.df.isnull().sum() # Identify missing values
         
         self.df = self.df.dropna() # Remove rows with missing values
 
         # Replace missing val with mean
-        for self.column in self.df:
-            if self.df[self.column].head(1).dtype != object: #str doesn't have mean
-                self.df[self.column].fillna(self.df[self.column].mean(), inplace=True)
+        for column in self.df:
+            if self.df[column].head(1).dtype != object: #str doesn't have mean
+                self.df[column].fillna(self.df[column].mean(), inplace=True)
 
         self.df = self.df.drop_duplicates() # Remove duplicate rows
-
-        clean = self.df[:2]
-        return f"{clean} is being cleaned"
     
     # Correct data entry errors i.e., typos 
     def replace(self,column = None, error_value  = None, correct_value  = None):
@@ -40,20 +44,37 @@ class Cleaning:
 
     #This is out of line
     def outliers(self):
-        z_scores = (self.df - self.df.mean()) / self.df.std()
-        self.df = self.df[(z_scores < 3).all(axis=1)]
+        # z_scores = (self.df - self.df.mean()) / self.df.std()
+        # self.df = self.df[(z_scores < 3).all(axis=1)]
+        # print(self.df)
+
+        for column in self.df:
+            if self.df[column].head(1).dtype != object:
+                z_scores = np.abs(stats.zscore(self.df[column]))
+                self.df = self.df[(z_scores < 3)]
+                # print(self.df)
         
     # This will transform one column and also for categorizes the column 
     def transform(self):
-        for self.column in self.df:
-            if self.df[self.column].head(1).dtype != object:
-                self.df[self.column] = np.log(self.df[self.column])
+        # print(self.df)
+        for column in self.df:
+            if self.df[column].head(1).dtype != object:
+                # self.df[column] = np.log(self.df[column])
 
                 # Min-Max scaling
-                self.df[self.column] = (self.df[self.column] - self.df[self.column].min()) / (self.df[self.column].max() - self.df[self.column].min())
+                # print(self.df[column])
+                self.df[column] = (self.df[column] - self.df[column].min()) / (self.df[column].max() - self.df[column].min())
+                # print(self.df[column])
 
-    def categorical(self, categorical_column = None):
-        self.df = pd.get_dummies(self.df, columns=[categorical_column])
+    def categorical(self):
         le = LabelEncoder()
-        self.df[categorical_column] = le.fit_transform(self.df[categorical_column])
+        for column in self.df:
+            if self.df[column].head(1).dtype == object and "id" in str(column).lower():
+                self.df = pd.get_dummies(self.df, columns=[column])
+                self.df[column] = le.fit_transform(self.df[column])
 
+
+    def cleaned_data(self):
+        cleaned_data_json = self.df.to_json(orient='columns')
+        # new_file = self.df.to_json('cleaned.json')
+        return cleaned_data_json

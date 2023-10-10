@@ -1,20 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ... (your meta tags and other head elements) ... -->
     <title>Main</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <h1>Analyse your data here!!</h1>
+    <h1>Analyze your data here!!</h1>
     <div>
         <h2>{{ clean }}</h2>
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" id="file-upload">
             {% csrf_token %}
-            <label for="file_">Upoload your data here</label>
+            <label for="file_">Upload your data here</label>
             <input id="file_" type="file" name='uploaded-file' accept=".csv, .json, .xlsx"/>
             <input type="submit" value="Upload">
         </form>
+        <div class="drop-menu">
+            <div id="x-axis">
+                <select id="x-columns" name="x-columns" class="options">
+                    <option value="">Select an option</option>
+                </select>
+            </div>
+            <div id="y-axis">
+                <select id="y-columns" name="y-columns" class="options">
+                    <option value="">Select an option</option>
+                </select>
+            </div>
+        </div>
+        <!-- Add an empty div to hold the chart -->
+        <div id="chart-container">
+            <canvas id="chart" width="200px" height="200px"></canvas>
+        </div>
     </div>
+
+    <!-- <script>
+        $(document).ready(function() {
+            function handleFormSubmission(event) {
+                event.preventDefault(); // Prevent the default form submission
+    
+                // Create a FormData object and append the file data
+                var formData = new FormData();
+                formData.append('uploaded-file', $('#file_')[0].files[0]);
+    
+                // Send an AJAX request to your Django view to get cleaned data
+                $.ajax({
+                    url: window.location.href,
+                    type: 'POST',
+                    data: formData,
+                    processData: false, // Prevent jQuery from converting the data to a string
+                    contentType: false, // Ensure the content type is set to multipart/form-data
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.data) {
+                            console.log(response.data); // Log the response.data
+                        }
+                    },
+                    error: function(err) {
+                        console.log('AJAX request failed:', err);
+                    }
+                });
+            }
+    
+            // Attach the form submission event to the form element
+            $('#file-upload').submit(handleFormSubmission);
+        });
+    </script> -->
+    
+    <script>
+        $(document).ready(function() {
+            function handleFileChange(event) {
+                // Create a FormData object and append the file data
+                var formData = new FormData();
+                formData.append('uploaded-file', event.target.files[0]);
+    
+                // Send an AJAX request to your Django view to get cleaned data
+                $.ajax({
+                    url: window.location.href,
+                    type: 'POST',
+                    data: formData,
+                    processData: false, // Prevent jQuery from converting the data to a string
+                    contentType: false, // Ensure the content type is set to multipart/form-data
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        var data = JSON.parse(response.data);
+
+                        if (data) {
+                            console.log(data); // Log the response.data
+                            var columns = Object.keys(data);
+                            populateOptions(columns);
+                            var xValues = Object.values(data.x);
+                            var yValues = Object.values(data.y);
+                            // xValues = xValues.map(parseFloat);
+                            // yValues = yValues.map(parseFloat);
+                            chart(xValues, yValues)
+                        }
+                    },
+                    error: function(err) {
+                        console.log('AJAX request failed:', err);
+                    }
+                });
+            }
+    
+            // Attach the file change event to the file input element
+            $('#file_').on('change', handleFileChange);
+        });
+
+        function populateOptions(options) {
+            var select = $('.options');
+            select.empty();  // Clear existing options
+
+            $.each(options, function(index, option) {
+                select.append($('<option>').val(option).text(option));
+            });
+        }
+
+        function chart(xValues, yValues) {
+            var ctx = document.getElementById('chart').getContext('2d');
+
+            // Fit a linear regression line using a library like 'regression' or calculate it manually
+            var regression = linearRegression(xValues, yValues);
+
+            var linearRegressionChart = new Chart(ctx, {
+                type: 'scatter', // You can choose the chart type you prefer
+                data: {
+                    datasets: [{
+                        label: 'Linear Regression',
+                        data: xValues.map((x, i) => ({ x, y: regression.equation[0] * x + regression.equation[1] })),
+                        showLine: true,
+                        borderColor: 'blue',
+                    }, {
+                        label: 'Data Points',
+                        data: xValues.map((x, i) => ({ x, y: yValues[i] })),
+                        pointBackgroundColor: 'red',
+                    }],
+                },
+                options: {
+                    // Chart options, labels, legends, etc.
+                }
+            });
+        }
+
+        // Function to calculate linear regression
+        function linearRegression(x, y) {
+            var n = x.length;
+            var sumX = x.reduce((a, b) => a + b, 0);
+            var sumY = y.reduce((a, b) => a + b, 0);
+            var sumXY = x.map((xi, i) => xi * y[i]).reduce((a, b) => a + b, 0);
+            var sumX2 = x.map(xi => xi ** 2).reduce((a, b) => a + b, 0);
+            var slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX ** 2);
+            var intercept = (sumY - slope * sumX) / n;
+            return { equation: [slope, intercept] };
+        }
+
+    </script>
+    
+    
 </body>
 </html>
