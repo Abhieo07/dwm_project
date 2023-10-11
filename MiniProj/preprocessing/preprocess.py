@@ -69,7 +69,7 @@ class Cleaning:
     def categorical(self):
         le = LabelEncoder()
         for column in self.df:
-            if self.df[column].head(1).dtype == object and "id" in str(column).lower():
+            if not  "id" in str(column).lower() and self.df[column].head(1).dtype == object:
                 self.df = pd.get_dummies(self.df, columns=[column])
                 self.df[column] = le.fit_transform(self.df[column])
 

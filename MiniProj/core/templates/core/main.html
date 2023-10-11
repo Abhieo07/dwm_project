@@ -14,12 +14,12 @@
             {% csrf_token %}
             <label for="file_">Upload your data here</label>
             <input id="file_" type="file" name='uploaded-file' accept=".csv, .json, .xlsx"/>
-            <input type="submit" value="Upload">
+            <!-- <input type="submit" value="Upload"> -->
         </form>
         <div class="drop-menu">
             <div id="x-axis">
                 <select id="x-columns" name="x-columns" class="options">
-                    <option value="">Select an option</option>
+                    <option value="" disabled selected hidden>Select an option</option>
                 </select>
             </div>
             <div id="y-axis">
@@ -93,11 +93,31 @@
                             console.log(data); // Log the response.data
                             var columns = Object.keys(data);
                             populateOptions(columns);
-                            var xValues = Object.values(data.x);
-                            var yValues = Object.values(data.y);
-                            // xValues = xValues.map(parseFloat);
-                            // yValues = yValues.map(parseFloat);
-                            chart(xValues, yValues)
+
+                            const optionChange = document.querySelectorAll(".options");
+                            optionChange.forEach(option => {
+                                option.addEventListener('change', ()=>{
+                                    
+                                    // select x-column
+                                    var x= document.querySelector("#x-columns");
+                                    x = x.options[x.selectedIndex].value;
+                                    console.log(x)
+                                    console.log(data[x])
+                                    // select y-column
+                                    var y= document.querySelector("#y-columns");
+                                    y = y.options[y.selectedIndex].value;
+                                    console.log(y)
+                                    console.log(data[y])
+
+                                    var xValues = Object.values(data[x]);
+                                    var yValues = Object.values(data[y]);
+                                    // xValues = xValues.map(parseFloat);
+                                    // yValues = yValues.map(parseFloat);
+                                    
+                                    chart(xValues, yValues)
+                                });
+                            });
+
                         }
                     },
                     error: function(err) {
@@ -114,13 +134,20 @@
             var select = $('.options');
             select.empty();  // Clear existing options
 
+            select.append($('<option>').val("select-an-option"));
+
             $.each(options, function(index, option) {
                 select.append($('<option>').val(option).text(option));
             });
         }
 
+        var linearRegressionChart;
         function chart(xValues, yValues) {
             var ctx = document.getElementById('chart').getContext('2d');
+            // Destroy the existing chart if it exists
+            if (linearRegressionChart) {
+                linearRegressionChart.destroy();
+            }
 
             // Fit a linear regression line using a library like 'regression' or calculate it manually
             var regression = linearRegression(xValues, yValues);
