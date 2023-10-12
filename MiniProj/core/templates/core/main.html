@@ -98,7 +98,7 @@
             var select = $('#chart-type');
             select.empty();  // Clear existing options
 
-            select.append($('<option>').val("select-chart").text("select-chart"));
+            // select.append($('<option>').val("select-chart").text("select-chart"));
 
             $.each(options, function(index, option) {
                 select.append($('<option>').val(option).text(option));
@@ -210,23 +210,32 @@
         }
 
         const categoricalData = (data) => {
-            const categories = Object.keys(data);
-            const categoriVal = categories.map(category => Object.values(data[category]));
-            var labels = Object.keys(data[categories[0]]);
-            var datasets = categories.map((category, index) => {
-                return {
-                    label: category,
-                    data: categoriVal[index],
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)', // Customize the colors as needed
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1,
-                };
+
+            var sums = {};
+
+            // Iterate through the keys of the outer object
+            Object.keys(data).forEach(function(key) {
+                sums[key] = 0; // Initialize the sum to 0
+
+                // Iterate through the values of the inner object
+                Object.values(data[key]).forEach(function(value) {
+                    if (typeof value === 'number') {
+                        sums[key] += value; // Sum the numeric values
+                    } else if (value === true) {
+                        sums[key]++; // Count the 'true' values
+                    }
+                });
             });
+            
 
             return {
-                labels: categories,
-                datasets: datasets,
-            }
+                labels: Object.keys(sums),
+                datasets: [{
+                    label: 'Categorical Data',
+                    data: Object.values(sums),
+                    backgroundColor: 'blue', // Customize the background color
+                }],
+            };
         }
 
 
@@ -275,6 +284,9 @@
                                 });
                             });
 
+                            // Update the chart type and data when a new file is uploaded
+                            updateChart(data);
+
                         }
                     },
                     error: function(err) {
@@ -292,7 +304,7 @@
             var select = $('.options');
             select.empty();  // Clear existing options
 
-            select.append($('<option>').val("select-an-option").text("select-an-option"));
+            // select.append($('<option>').val("select-an-option").text("select-an-option"));
 
             $.each(options, function(index, option) {
                 select.append($('<option>').val(option).text(option));
