@@ -16,6 +16,11 @@
             <input id="file_" type="file" name='uploaded-file' accept=".csv, .json, .xlsx"/>
             <!-- <input type="submit" value="Upload"> -->
         </form>
+        <div>
+            <select name="" id="chart-type">
+                <option value="">Chart type</option>
+            </select>
+        </div>
         <div class="drop-menu">
             <div id="x-axis">
                 <select id="x-columns" name="x-columns" class="options">
@@ -70,7 +75,157 @@
     </script> -->
     
     <script>
+        var previousChart = null;
+        let chartType = 'scatter';
+        let chartData = getRandomData();
+        var chartOptions = ['scatter', 'bar'];
+
+
+
+
+        
+        const typeChange = document.querySelector('#chart-type');
+        typeChange.addEventListener('change', ()=>{
+            console.log(typeChange.options[typeChange.selectedIndex].value);
+
+            chartType = typeChange.options[typeChange.selectedIndex].value;
+            const ctx = document.getElementById('chart').getContext('2d');
+            createChart(chartType,chartData,ctx);
+        })
+
+        function populateChartTypes(options) {
+            var select = $('#chart-type');
+            select.empty();  // Clear existing options
+
+            select.append($('<option>').val("select-chart").text("select-chart"));
+
+            $.each(options, function(index, option) {
+                select.append($('<option>').val(option).text(option));
+            });
+        }
+
+        function getRandomData() {
+            // Generate random data for demonstration
+            var x = [];
+            var y = [];
+            for (let index = 0; index < 30; index++) {
+                x.push(Math.floor(Math.random() * 100)); 
+            }
+            for (let index = 0; index < x.length; index++) {
+                y.push(Math.floor(Math.random() * 101))  
+            }
+
+            var regression = linearRegression(x, y);
+            return {
+                datasets: [{
+                    label: 'Linear Regression',
+                    data: x.map((x, i) => ({ x, y: regression.equation[0] * x + regression.equation[1] })),
+                    showLine: true,
+                    borderColor: 'blue',
+                }, {
+                    label: 'Data Points',
+                    data: x.map((x, i) => ({ x, y: y[i] })),
+                    pointBackgroundColor: 'red',
+                }],
+            };
+        }
+
+        function createChart(type, data, ctx) {
+            if (previousChart) {
+                previousChart.destroy();
+                previousChart = null;
+            }
+            chart = new Chart(ctx, {
+                type: type,
+                data: data,
+                options: {
+                responsive: true,
+                scales: {
+                    x: {
+                    ticks: {
+                        font: {
+                        size: 16 
+                        }
+                    }
+                    },
+                    y: {
+                    ticks: {
+                        font: {
+                        size: 16
+                        }
+                    }
+                    }
+                }
+                },
+            });
+
+            previousChart = chart;
+        }
+
+        function updateChart(data){
+
+            // select x-column
+            var x= document.querySelector("#x-columns");
+            x = x.options[x.selectedIndex].value;
+            console.log(x)
+            console.log(data[x])
+            // select y-column
+            var y= document.querySelector("#y-columns");
+            y = y.options[y.selectedIndex].value;
+            console.log(y)
+            console.log(data[y])
+
+            var xValues = Object.values(data[x]);
+            var yValues = Object.values(data[y]);
+
+            // get chartData
+            if(chartType === 'scatter'){
+                chartData = linearRegData(xValues, yValues);
+            }
+            else if(chartType === 'bar'){
+                chartData = categoricalData(data);
+            }
+            // create the chart
+            const ctx = document.getElementById('chart').getContext('2d');
+            createChart(chartType, chartData, ctx);
+        }
+        
+        const linearRegData = (xValues, yValues) => {
+            var regression = linearRegression(xValues, yValues);
+            return {
+                datasets: [{
+                    label: 'Linear Regression',
+                    data: xValues.map((x, i) => ({ x, y: regression.equation[0] * x + regression.equation[1] })),
+                    showLine: true,
+                    borderColor: 'blue',
+                }, {
+                    label: 'Data Points',
+                    data: xValues.map((x, i) => ({ x, y: yValues[i] })),
+                    pointBackgroundColor: 'red',
+                }],
+            }
+        }
+
+        const categoricalData = (data) => {
+            const categories = Object.keys(data);
+            const categoriVal = categories.map()
+        }
+
+
+
+
+
+
+
+
         $(document).ready(function() {
+
+            const ctx = document.getElementById('chart').getContext('2d');
+            createChart(chartType, chartData, ctx);
+
+            // populate chart-type options
+            populateChartTypes(chartOptions);
+
             function handleFileChange(event) {
                 // Create a FormData object and append the file data
                 var formData = new FormData();
@@ -97,24 +252,8 @@
                             const optionChange = document.querySelectorAll(".options");
                             optionChange.forEach(option => {
                                 option.addEventListener('change', ()=>{
-                                    
-                                    // select x-column
-                                    var x= document.querySelector("#x-columns");
-                                    x = x.options[x.selectedIndex].value;
-                                    console.log(x)
-                                    console.log(data[x])
-                                    // select y-column
-                                    var y= document.querySelector("#y-columns");
-                                    y = y.options[y.selectedIndex].value;
-                                    console.log(y)
-                                    console.log(data[y])
 
-                                    var xValues = Object.values(data[x]);
-                                    var yValues = Object.values(data[y]);
-                                    // xValues = xValues.map(parseFloat);
-                                    // yValues = yValues.map(parseFloat);
-                                    
-                                    chart(xValues, yValues)
+                                    updateChart(data);
                                 });
                             });
 
@@ -130,45 +269,15 @@
             $('#file_').on('change', handleFileChange);
         });
 
+
         function populateOptions(options) {
             var select = $('.options');
             select.empty();  // Clear existing options
 
-            select.append($('<option>').val("select-an-option"));
+            select.append($('<option>').val("select-an-option").text("select-an-option"));
 
             $.each(options, function(index, option) {
                 select.append($('<option>').val(option).text(option));
-            });
-        }
-
-        var linearRegressionChart;
-        function chart(xValues, yValues) {
-            var ctx = document.getElementById('chart').getContext('2d');
-            // Destroy the existing chart if it exists
-            if (linearRegressionChart) {
-                linearRegressionChart.destroy();
-            }
-
-            // Fit a linear regression line using a library like 'regression' or calculate it manually
-            var regression = linearRegression(xValues, yValues);
-
-            var linearRegressionChart = new Chart(ctx, {
-                type: 'scatter', // You can choose the chart type you prefer
-                data: {
-                    datasets: [{
-                        label: 'Linear Regression',
-                        data: xValues.map((x, i) => ({ x, y: regression.equation[0] * x + regression.equation[1] })),
-                        showLine: true,
-                        borderColor: 'blue',
-                    }, {
-                        label: 'Data Points',
-                        data: xValues.map((x, i) => ({ x, y: yValues[i] })),
-                        pointBackgroundColor: 'red',
-                    }],
-                },
-                options: {
-                    // Chart options, labels, legends, etc.
-                }
             });
         }
 

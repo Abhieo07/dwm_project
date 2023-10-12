@@ -32,14 +32,14 @@ class Cleaning:
 
         # Replace missing val with mean
         for column in self.df:
-            if self.df[column].head(1).dtype != object: #str doesn't have mean
+            if self.df[column].dtype != object: #str doesn't have mean
                 self.df[column].fillna(self.df[column].mean(), inplace=True)
 
         self.df = self.df.drop_duplicates() # Remove duplicate rows
     
     # Correct data entry errors i.e., typos 
     def replace(self,column = None, error_value  = None, correct_value  = None):
-        if self.df[column].head(1).dtype == object: # only str
+        if self.df[column].dtype == object: # only str
             self.df[column] = self.df[column].str.replace(error_value, correct_value)
 
     #This is out of line
@@ -49,7 +49,7 @@ class Cleaning:
         # print(self.df)
 
         for column in self.df:
-            if self.df[column].head(1).dtype != object:
+            if self.df[column].dtype != object:
                 z_scores = np.abs(stats.zscore(self.df[column]))
                 self.df = self.df[(z_scores < 3)]
                 # print(self.df)
@@ -58,7 +58,7 @@ class Cleaning:
     def transform(self):
         # print(self.df)
         for column in self.df:
-            if self.df[column].head(1).dtype != object:
+            if self.df[column].dtype != object:
                 # self.df[column] = np.log(self.df[column])
 
                 # Min-Max scaling
@@ -67,10 +67,18 @@ class Cleaning:
                 # print(self.df[column])
 
     def categorical(self):
+        # one-hot encoding
+        for column in self.df:
+            if len(self.df[column].unique()) == len(self.df):
+                continue
+            if self.df[column].dtype == object:
+                self.df = pd.get_dummies(self.df, columns=[column])
+
         le = LabelEncoder()
         for column in self.df:
-            if not  "id" in str(column).lower() and self.df[column].head(1).dtype == object:
-                self.df = pd.get_dummies(self.df, columns=[column])
+            if len(self.df[column].unique()) == len(self.df):
+                continue
+            if self.df[column].dtype == object:
                 self.df[column] = le.fit_transform(self.df[column])
 
 
