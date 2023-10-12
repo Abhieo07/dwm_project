@@ -89,6 +89,7 @@
             console.log(typeChange.options[typeChange.selectedIndex].value);
 
             chartType = typeChange.options[typeChange.selectedIndex].value;
+            console.log(chartType, chartData);
             const ctx = document.getElementById('chart').getContext('2d');
             createChart(chartType,chartData,ctx);
         })
@@ -180,9 +181,11 @@
 
             // get chartData
             if(chartType === 'scatter'){
+                console.log("chart-type scatter");
                 chartData = linearRegData(xValues, yValues);
             }
             else if(chartType === 'bar'){
+                console.log("chart-type bar");
                 chartData = categoricalData(data);
             }
             // create the chart
@@ -208,7 +211,22 @@
 
         const categoricalData = (data) => {
             const categories = Object.keys(data);
-            const categoriVal = categories.map()
+            const categoriVal = categories.map(category => Object.values(data[category]));
+            var labels = Object.keys(data[categories[0]]);
+            var datasets = categories.map((category, index) => {
+                return {
+                    label: category,
+                    data: categoriVal[index],
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)', // Customize the colors as needed
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                };
+            });
+
+            return {
+                labels: categories,
+                datasets: datasets,
+            }
         }
 
 
