@@ -17,7 +17,7 @@
             <!-- <input type="submit" value="Upload"> -->
         </form>
         <div>
-            <select name="" id="chart-type">
+            <select name="chart-type" id="chart-type" class="">
                 <option value="">Chart type</option>
             </select>
         </div>
@@ -78,7 +78,7 @@
         var previousChart = null;
         let chartType = 'scatter';
         let chartData = getRandomData();
-        var chartOptions = ['scatter', 'bar'];
+        var chartOptions = ['scatter', 'bar', 'pie', 'line'];
 
 
 
@@ -89,16 +89,16 @@
             console.log(typeChange.options[typeChange.selectedIndex].value);
 
             chartType = typeChange.options[typeChange.selectedIndex].value;
-            console.log(chartType, chartData);
+            
             const ctx = document.getElementById('chart').getContext('2d');
             createChart(chartType,chartData,ctx);
-        })
+        });
 
         function populateChartTypes(options) {
             var select = $('#chart-type');
             select.empty();  // Clear existing options
 
-            // select.append($('<option>').val("select-chart").text("select-chart"));
+            select.append($('<option>').val("select-chart").text("select-chart"));
 
             $.each(options, function(index, option) {
                 select.append($('<option>').val(option).text(option));
@@ -168,19 +168,16 @@
             // select x-column
             var x= document.querySelector("#x-columns");
             x = x.options[x.selectedIndex].value;
-            console.log(x)
-            console.log(data[x])
+            
             // select y-column
             var y= document.querySelector("#y-columns");
             y = y.options[y.selectedIndex].value;
-            console.log(y)
-            console.log(data[y])
-
-            var xValues = Object.values(data[x]);
-            var yValues = Object.values(data[y]);
 
             // get chartData
             if(chartType === 'scatter'){
+                var xValues = Object.values(data[x]);
+                var yValues = Object.values(data[y]);
+
                 console.log("chart-type scatter");
                 chartData = linearRegData(xValues, yValues);
             }
@@ -188,6 +185,15 @@
                 console.log("chart-type bar");
                 chartData = categoricalData(data);
             }
+            else if(chartType === 'pie'){
+                chartData = quantitativeData(data);
+            }
+            else if(chartType === 'line'){
+                console.log(x,y);
+                chartData = timeOrTrendData(data, x, y);
+            }
+
+            console.log(chartType, chartData);
             // create the chart
             const ctx = document.getElementById('chart').getContext('2d');
             createChart(chartType, chartData, ctx);
@@ -238,12 +244,92 @@
             };
         }
 
+        const quantitativeData = (data) =>{
+            // Extract labels from outer keys if the value is numeric
+            const labels = Object.keys(data).filter(key => {
+                return typeof Object.values(data[key])[0] === 'number';
+            });
+
+            // Calculate sums for each outer key
+            const sums = labels.map(label => {
+                return Object.values(data[label]).reduce((sum, value) => sum + value, 0);
+            });
+
+
+            console.log("data set for quantitative analysis",labels,sums);
+
+            return {
+                labels: labels,
+                datasets: [{
+                    label: "Quantative Data",
+                    data: sums,
+                    backgroundColor: ['red', 'green', 'blue'],
+                }],
+            }
+        }
+
+        const timeOrTrendData = (data, x="select-an-option", y="select-an-option") => {
+            if(x!="select-an-option" && y!="select-an-option"){
+                return {
+                    labels:Object.values(data[x]),
+                    datasets:[{
+                        label: x +" vs "+ y,
+                        data: Object.values(data[y]),
+                        backgroundColor:getRandomColor(),
+                    }],
+                };
+            }
+
+            var labels = [];
+            var datasets = [];
+
+            Object.keys(data).forEach(function(key) {
+                var values = data[key];
+
+                // Check if the key resembles a date or time
+                if (/date|time|year|month|day/i.test(key)) {
+                    if (isValidDate(values[0])) {
+                        labels = Object.values(key);
+                    }
+                } 
+
+                // Check if the values are numeric
+                if (typeof values[0] === 'number' && !isNaN(values[0])) {
+                    datasets.push({
+                        label: key,
+                        data: Object.values(values),
+                        backgroundColor:getRandomColor(),
+                    });
+                }
+            });
+
+            console.log(labels,datasets);
+
+            return {
+                labels:labels,
+                datasets:datasets,
+            };
+        }
 
 
 
 
 
+        function isValidDate(dateString) {
+            var date = new Date(dateString);
+            var timePattern = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
+            return !isNaN(date) || timePattern.test(dateString);
+        }
 
+        // Function to generate random colors
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
 
         $(document).ready(function() {
 
@@ -276,16 +362,12 @@
                             var columns = Object.keys(data);
                             populateOptions(columns);
 
-                            const optionChange = document.querySelectorAll(".options");
+                            const optionChange = document.querySelectorAll(".options, #chart-type");
                             optionChange.forEach(option => {
                                 option.addEventListener('change', ()=>{
-
                                     updateChart(data);
                                 });
                             });
-
-                            // Update the chart type and data when a new file is uploaded
-                            updateChart(data);
 
                         }
                     },
@@ -304,7 +386,7 @@
             var select = $('.options');
             select.empty();  // Clear existing options
 
-            // select.append($('<option>').val("select-an-option").text("select-an-option"));
+            select.append($('<option>').val("select-an-option").text("select-an-option"));
 
             $.each(options, function(index, option) {
                 select.append($('<option>').val(option).text(option));
