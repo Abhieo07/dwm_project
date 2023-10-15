@@ -23,7 +23,7 @@ class Cleaning:
             
 
         except Exception as e:
-            f'An error ocuured {str(e)}'
+            print(f'An error ocuured {str(e)}')
 
     def clean(self):
         self.missing_values = self.df.isnull().sum() # Identify missing values
@@ -32,7 +32,7 @@ class Cleaning:
 
         # Replace missing val with mean
         for column in self.df:
-            if self.df[column].dtype != object: #str doesn't have mean
+            if self.df[column].dtype == int or self.df[column].dtype == float: #str doesn't have mean
                 self.df[column].fillna(self.df[column].mean(), inplace=True)
 
         self.df = self.df.drop_duplicates() # Remove duplicate rows
@@ -44,12 +44,8 @@ class Cleaning:
 
     #This is out of line
     def outliers(self):
-        # z_scores = (self.df - self.df.mean()) / self.df.std()
-        # self.df = self.df[(z_scores < 3).all(axis=1)]
-        # print(self.df)
-
         for column in self.df:
-            if self.df[column].dtype != object:
+            if self.df[column].dtype == int or self.df[column].dtype == float:
                 z_scores = np.abs(stats.zscore(self.df[column]))
                 self.df = self.df[(z_scores < 3)]
                 # print(self.df)
@@ -58,7 +54,7 @@ class Cleaning:
     def transform(self):
         # print(self.df)
         for column in self.df:
-            if self.df[column].dtype != object:
+            if self.df[column].dtype == int or self.df[column].dtype == float:
                 # self.df[column] = np.log(self.df[column])
 
                 # Min-Max scaling
@@ -83,6 +79,6 @@ class Cleaning:
 
 
     def cleaned_data(self):
-        cleaned_data_json = self.df.to_json(orient='columns')
+        cleaned_data_json = self.df.to_json(orient='columns', date_format='iso')
         # new_file = self.df.to_json('cleaned.json')
         return cleaned_data_json

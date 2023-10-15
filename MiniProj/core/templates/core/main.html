@@ -3,7 +3,9 @@
 <head>
     <!-- ... (your meta tags and other head elements) ... -->
     <title>Main</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@4.2.6/build/index.umd.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
@@ -78,7 +80,7 @@
         var previousChart = null;
         let chartType = 'scatter';
         let chartData = getRandomData();
-        var chartOptions = ['scatter', 'bar', 'pie', 'line'];
+        var chartOptions = ['scatter', 'bar', 'pie', 'line', 'heatmap', 'boxplot'];
 
 
 
@@ -86,10 +88,13 @@
         
         const typeChange = document.querySelector('#chart-type');
         typeChange.addEventListener('change', ()=>{
+            
             console.log(typeChange.options[typeChange.selectedIndex].value);
 
             chartType = typeChange.options[typeChange.selectedIndex].value;
-            
+            if(previousChart){
+                previousChart.destroy();
+            }
             const ctx = document.getElementById('chart').getContext('2d');
             createChart(chartType,chartData,ctx);
         });
@@ -131,40 +136,53 @@
             };
         }
 
-        function createChart(type, data, ctx) {
+        function createChart(type, data, ctx, customOptions = {}) {
             if (previousChart) {
                 previousChart.destroy();
                 previousChart = null;
             }
-            chart = new Chart(ctx, {
-                type: type,
-                data: data,
-                options: {
+
+            // Default chart options
+            const defaultOptions = {
                 responsive: true,
                 scales: {
                     x: {
-                    ticks: {
-                        font: {
-                        size: 16 
-                        }
-                    }
+                        ticks: {
+                            font: {
+                                size: 16,
+                            },
+                        },
                     },
                     y: {
-                    ticks: {
-                        font: {
-                        size: 16
-                        }
-                    }
-                    }
-                }
+                        ticks: {
+                            font: {
+                                size: 16,
+                            },
+                        },
+                    },
                 },
+            };
+
+            // Merge the default options with custom options
+            var options = {
+                ...defaultOptions,
+                ...customOptions,
+            };
+            if(type === 'heatmap'){
+                type = 'matrix';
+                options = data.options;
+            }
+
+            chart = new Chart(ctx, {
+                type: type,
+                data: data,
+                options: options,
             });
 
             previousChart = chart;
         }
 
         function updateChart(data){
-
             // select x-column
             var x= document.querySelector("#x-columns");
             x = x.options[x.selectedIndex].value;
@@ -189,8 +207,16 @@
                 chartData = quantitativeData(data);
             }
             else if(chartType === 'line'){
-                console.log(x,y);
                 chartData = timeOrTrendData(data, x, y);
+            }
+            else if(chartType === 'heatmap'){
+                chartData = heatmapData(data, x, y);
+                console.log("Heat map triggered! ",chartType,chartData);
+            }
+            else if(chartType === 'boxplot'){
+                chartData = boxplotData(data, x, y);
+            }else{
+                alert("Inalid Chart type!");
             }
 
             console.log(chartType, chartData);
@@ -269,39 +295,47 @@
         }
 
         const timeOrTrendData = (data, x="select-an-option", y="select-an-option") => {
-            if(x!="select-an-option" && y!="select-an-option"){
-                return {
-                    labels:Object.values(data[x]),
-                    datasets:[{
-                        label: x +" vs "+ y,
-                        data: Object.values(data[y]),
-                        backgroundColor:getRandomColor(),
-                    }],
-                };
-            }
-
+            
             var labels = [];
             var datasets = [];
 
-            Object.keys(data).forEach(function(key) {
-                var values = data[key];
-
-                // Check if the key resembles a date or time
-                if (/date|time|year|month|day/i.test(key)) {
-                    if (isValidDate(values[0])) {
-                        labels = Object.values(key);
-                    }
-                } 
-
-                // Check if the values are numeric
-                if (typeof values[0] === 'number' && !isNaN(values[0])) {
-                    datasets.push({
-                        label: key,
-                        data: Object.values(values),
+            if(x!="select-an-option" && y!="select-an-option"){
+                labels = Object.values(data[x]);
+                datasets = [{
+                        label: x,
+                        data: Object.values(data[x]),
                         backgroundColor:getRandomColor(),
-                    });
-                }
-            });
+                    },
+                    {
+                        label: y,
+                        data: Object.values(data[y]),
+                        backgroundColor:getRandomColor(),
+                    },
+                ]
+
+            }
+            else {
+                Object.keys(data).forEach(function(key) {
+                    var values = data[key];
+
+                    // Check if the key resembles a date or time
+                    if (/date|time|year|month|day/i.test(key)) {
+                        if (isValidDate(values[0])) {
+                            labels = Object.values(data[key]);
+                        }
+                    } 
+
+                    // Check if the values are numeric
+                    if (typeof values[0] === 'number' && !isNaN(values[0])) {
+                        datasets.push({
+                            label: key,
+                            data: Object.values(values),
+                            backgroundColor:getRandomColor(),
+                        });
+                    }
+                });
+
+            }
 
             console.log(labels,datasets);
 
@@ -311,9 +345,149 @@
             };
         }
 
+        const heatmapData = (data,  x="select-an-option", y="select-an-option") => {
+            const keys = Object.keys(data);
+            const heatmapData = [];
+            var xLabels = [];
+            var yLabels = [];
+            var heightC;
+            var widthC;
 
+            if(x!="select-an-option" && y!="select-an-option"){
+                const obj1 = data[x];
+                const obj2 = data[y];
+                console.log(x,y,obj1,obj2,data)
+                
 
+                Object.keys(obj1).forEach((key) => {
+                    const x = key;
+                    const y = obj1[key];      // Get the value from obj1
+                    var v;
+                    if(typeof obj2[key] ==="boolean"){
+                        v = obj2[key] ? 1 : 0;  // Use the value from obj2 to determine v
+                    }else{
+                        v = obj2[key];
+                    }
+                    heatmapData.push({ x, y, v });
+                });
+                xLabels = heatmapData.map(item => item.x);
+                yLabels = Array.from(new Set(heatmapData.map(item => item.y)));
+                heightC = yLabels.length;
+                widthC = xLabels.length;
+            }
+            else{
+                // Iterate through keys and reformat the data
+                keys.forEach(xKey => {
+                    Object.keys(data[xKey]).forEach(yKey => {
+                        heatmapData.push({ x: yKey, y: xKey, v: data[xKey][yKey] ? 1 : 0 });
+                    });
+                });
+                xLabels = Object.keys(keys[0]);
+                yLabels = keys;
+                heightC = widthC = keys.length - 1;
+            }
+            console.log("lengths ",heightC,widthC);
+            
+            return {
+                datasets: [{
+                    label:'Value',
+                    data: heatmapData,
+                    backgroundColor(context) {
+                    const value = context.dataset.data[context.dataIndex].v;
+                    const alpha = value;
+                    return 'rgba(0, 128, 0, ' + alpha + ')';
+                    },
+                    borderColor(context) {
+                    const value = context.dataset.data[context.dataIndex].v;
+                    const alpha = value;
+                    return 'rgba(0, 100, 0, ' + alpha + ')';
+                    },
+                    borderWidth: 1,
+                    width: ({chart}) => (chart.chartArea || {}).width / widthC,
+                    height: ({chart}) =>(chart.chartArea || {}).height / heightC
+                }],
+                options: {
+                    plugins: {
+                    legend: false,
+                    tooltip: {
+                        callbacks: {
+                        title() {
+                            return '';
+                        },
+                        label(context) {
+                            const v = context.dataset.data[context.dataIndex];
+                            return ['x: ' + v.x, 'y: ' + v.y, 'v: ' + v.v];
+                        }
+                        }
+                    }
+                    },
+                    scales: {
+                        x: {
+                            type: 'category',
+                            labels: xLabels,
+                            ticks: {
+                            display: true
+                            },
+                            title:{
+                            text:"Records",
+                            display:true
+                            },
+                            grid: {
+                            display: false
+                            }
+                        },
+                        y: {
+                            type: 'category',
+                            labels: yLabels,
+                            offset: true,
+                            ticks: {
+                            display: true
+                            },
+                            grid: {
+                            display: false
+                            }
+                        }
+                    }
+                },
+            };
+        };
 
+        const boxplotData = (data) => {
+            var labels = [];
+            var datasets = [];
+
+            Object.keys(data).forEach((key) => {
+                var values = data[key];
+
+                if (typeof values[0] === 'number' && !isNaN(values[0])) {
+                    datasets.push({
+                        data: Object.values(values),
+                    });
+                    labels.push(key);
+                }
+            });
+
+            datasets = [{
+                label:'Dataset',
+                backgroundColor: getRandomColor(),
+                data:datasets.map(item=>item.data),
+            },]
+
+            return {
+                labels:labels,
+                datasets:datasets,
+                options: {
+                    responsive: true,
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Box Plot'
+                    }
+                }
+            }
+        }
 
         function isValidDate(dateString) {
             var date = new Date(dateString);
