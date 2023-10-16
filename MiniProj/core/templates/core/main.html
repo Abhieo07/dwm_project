@@ -3,44 +3,183 @@
 <head>
     <!-- ... (your meta tags and other head elements) ... -->
     <title>Main</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix@1.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@4.2.6/build/index.umd.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
-<body>
-    <h1>Analyze your data here!!</h1>
-    <div>
-        <h2>{{ clean }}</h2>
-        <form method="post" enctype="multipart/form-data" id="file-upload">
-            {% csrf_token %}
-            <label for="file_">Upload your data here</label>
-            <input id="file_" type="file" name='uploaded-file' accept=".csv, .json, .xlsx"/>
-            <!-- <input type="submit" value="Upload"> -->
-        </form>
-        <div>
-            <select name="chart-type" id="chart-type" class="">
-                <option value="">Chart type</option>
-            </select>
-        </div>
-        <div class="drop-menu">
-            <div id="x-axis">
-                <select id="x-columns" name="x-columns" class="options">
-                    <option value="" disabled selected hidden>Select an option</option>
-                </select>
-            </div>
-            <div id="y-axis">
-                <select id="y-columns" name="y-columns" class="options">
-                    <option value="">Select an option</option>
-                </select>
-            </div>
-        </div>
-        <!-- Add an empty div to hold the chart -->
-        <div id="chart-container">
-            <canvas id="chart" width="200px" height="200px"></canvas>
-        </div>
-    </div>
+<style>
+    body {
+        background: linear-gradient(180deg, #7e6048 50%, #ad9e8f 50%);
+        color:black;
+    }
 
+    .bg-light-section {
+        background-color: transparent;
+    }
+
+    .bg-light-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 33%;
+        background-color: #7e6048;
+        z-index: -1;
+    }
+
+    .bg-light-section::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 67%;
+        background-color: #ad9e8f;
+        z-index: -1;
+    }
+    
+    .container-txt {
+    position: relative;
+    text-align: center;
+}
+
+.tag1, .tag2 {
+    padding: 10px 20px;
+    display: inline-block;
+}
+
+.tag1 {
+    font-size: 46px; /* Match the font size of big-text */
+    font-weight: bolder;
+    font-stretch: expanded;
+    width: 100%;
+    line-height: 2.2;
+    padding-top: 15px;
+    padding-bottom: 10px;
+    color: #428a25;
+    transform: scaleY(3.5) scaleX(2.17);
+    z-index: 1;
+}
+
+.tag2 {
+    font-size: 24px; /* Match the font size of small-text */
+    font-weight: 500; /* Match the font-weight of small-text */
+    color: #c5d7be;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+@media (max-width: 768px) {
+    .tag1, .tag2 { /* Adjust font size for smaller screens */
+        padding: 8px 16px; /* Adjust padding for smaller screens */
+    }
+    .tag1{
+        transform: scaleY(2.5) scaleX(1.17);
+        font-size: 36px;
+    }
+    .tag2{
+        font-size: 12px;
+    }
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.custom-file-icon {
+    cursor: pointer;
+}
+
+.form-control {
+    background: inherit;
+}
+
+
+</style>
+
+
+
+<body>
+    <div class="container-txt">
+        <div class="tag1">VisualIntel</div>
+        <div class="tag2">Unlocking Insights through Data Visualization</div>
+    </div>
+    <section class="bg-light-section">
+        <div class="container  py-4">
+            <h4 class="my-4 text-center w-100" id="definition">{{ clean }}</h4>
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <form method="post" enctype="multipart/form-data" id="file-upload">
+                            {% csrf_token %}
+                            <input id="file_" type="file" name="uploaded-file" accept=".csv, .json, .xlsx" class="custom-file-input visually-hidden" onchange="handleFileChange(this)">
+                            <label class="custom-file-icon text-center" for="file_">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-file-earmark-arrow-up-fill" viewBox="0 0 16 16">
+                                    <path d="M9.293 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.707A1 1 0 0 0 13.707 4L10 .293A1 1 0 0 0 9.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 0 1-1-1zM6.354 9.854a.5.5 0 0 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 8.707V12.5a.5.5 0 0 1-1 0V8.707L6.354 9.854z"/>
+                                </svg>
+                            </label>
+                            <div class="progress mt-3 w-75 justify-content-center">
+                                <div class="progress-bar" id="file-upload-progress" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="form-group">
+                            <label for="chart-type" class="d-block">Analysis Type</label>
+                            <select name="chart-type" id="chart-type" class="form-control">
+                                <option value="">Select Chart Type</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col">
+                            <div id="x-axis" class="form-group">
+                                <label for="x-columns" class="d-block">X-Axis Column</label>
+                                <select id="x-columns" name="x-columns" class="options form-control">
+                                    <option value="" disabled selected hidden>Select an option</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div id="y-axis" class="form-group">
+                                <label for="y-columns" class="d-block">Y-Axis Column</label>
+                                <select id="y-columns" name="y-columns" class="options form-control">
+                                    <option value="" disabled selected hidden>Select an option</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <hr>
+                        <p id="info"></p>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <canvas id="chart" class="w-100 rounded"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    
     <!-- <script>
         $(document).ready(function() {
             function handleFormSubmission(event) {
@@ -77,25 +216,45 @@
     </script> -->
     
     <script>
+
+        var graphDefinitions = {
+            "Linear Regression": "Linear regression is a statistical method for modeling the relationship between a dependent variable and one or more independent variables.",
+            "Categorical Data Analysis": "Categorical data analysis is a method for analyzing data that consists of categories or groups, typically used to understand the relationships between categorical variables.",
+            "Time Series or Trends": "Time series analysis involves studying data points collected, recorded, or observed at equally spaced time intervals to identify trends, patterns, or make predictions.",
+            "Distribution Analysis": "Distribution analysis focuses on understanding the probability distribution of a dataset, which helps in describing the spread and shape of the data.",
+            "Correlation Analysis": "Correlation analysis using a heatmap is a visualization technique to explore the relationships between variables, showing the strength and direction of correlations.",
+            "Distribution and Outliers": "Distribution and outliers analysis includes examining the distribution of data and identifying data points that deviate significantly from the norm."
+        };
+
+
         var previousChart = null;
-        let chartType = 'scatter';
-        let chartData = getRandomData();
-        var chartOptions = ['scatter', 'bar', 'pie', 'line', 'heatmap', 'boxplot'];
-
-
-
-
+        let chartType = 'Linear Regression';
+        let chartData = getRandomData(chartType);
+        var chartOptions = ['Linear Regression', 'Categorical Data Analysis', 'Time Series or Trends', 'Distribution Analysis', 'Correlation Analysis', 'Distribution and Outliers'];
         
         const typeChange = document.querySelector('#chart-type');
         typeChange.addEventListener('change', ()=>{
-            
-            console.log(typeChange.options[typeChange.selectedIndex].value);
+            const x = document.querySelector('#x-columns');
+            const y = document.querySelector('#y-columns');
+            const def = document.querySelector('#definition');
+            console.log(typeChange.value);
 
-            chartType = typeChange.options[typeChange.selectedIndex].value;
+            chartType = typeChange.value;
+            def.innerHTML = graphDefinitions[chartType];
+            if(chartType === 'Categorical Data Analysis' || chartType === 'Distribution Analysis' || chartType === 'Distribution and Outliers'){
+                x.disabled = true;
+                y.disabled = true;
+            }else{
+                x.disabled = false;
+                y.disabled = false;
+            }
             if(previousChart){
                 previousChart.destroy();
+                previousChart = null;
             }
             const ctx = document.getElementById('chart').getContext('2d');
+            chartData = getRandomData(chartType);
+            console.log(chartData,chartType);
             createChart(chartType,chartData,ctx);
         });
 
@@ -110,29 +269,195 @@
             });
         }
 
-        function getRandomData() {
-            // Generate random data for demonstration
-            var x = [];
-            var y = [];
+        function getRandomData(chartType) {
+            if (chartType === 'Linear Regression') {
+                return generateRandomScatterData();
+            } else if (chartType === 'Categorical Data Analysis') {
+                return generateRandomBarData();
+            } else if (chartType === 'Distribution Analysis') {
+                return generateRandomPieData();
+            } else if (chartType === 'Time Series or Trends') {
+                return generateRandomLineData();
+            } else if (chartType === 'Correlation Analysis') {
+                return generateRandomHeatmapData();
+            } else if (chartType === 'Distribution and Outliers') {
+                return generateRandomBoxplotData();
+            }
+        }
+
+        function generateRandomScatterData() {
+            const x = [];
+            const y = [];
             for (let index = 0; index < 30; index++) {
-                x.push(Math.floor(Math.random() * 100)); 
+                x.push(Math.floor(Math.random() * 100));
             }
             for (let index = 0; index < x.length; index++) {
-                y.push(Math.floor(Math.random() * 101))  
+                y.push(Math.floor(Math.random() * 101));
             }
 
-            var regression = linearRegression(x, y);
+            const regression = linearRegression(x, y);
+
             return {
                 datasets: [{
                     label: 'Linear Regression',
                     data: x.map((x, i) => ({ x, y: regression.equation[0] * x + regression.equation[1] })),
                     showLine: true,
-                    borderColor: 'blue',
+                    borderColor: '#00296b',
+                    pointRadius:6,
                 }, {
                     label: 'Data Points',
                     data: x.map((x, i) => ({ x, y: y[i] })),
-                    pointBackgroundColor: 'red',
+                    pointBackgroundColor: '#f5cb5c',
+                    pointRadius:6,
                 }],
+            };
+        }
+
+        function generateRandomBarData() {
+            console.log("Random bar clicked")
+            const labels = ['Category 1', 'Category 2', 'Category 3', 'Category 4', 'Category 5'];
+            const data = labels.map(() => Math.floor(Math.random() * 100));
+
+            return {
+                labels: labels,
+                datasets: [{
+                    label: 'Bar Data',
+                    data: data,
+                    backgroundColor: ['#694f5d','#68a691', '#bfd3c1', '#ffe5d4', '#efc7c2',],
+                }],
+            };
+        }
+
+        function generateRandomPieData() {
+            const labels = ['Label 1', 'Label 2', 'Label 3', 'Label 4', 'Label 5'];
+            const data = labels.map(() => Math.floor(Math.random() * 100));
+
+            return {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: ['#694f5d','#68a691', '#bfd3c1', '#ffe5d4', '#efc7c2'],
+                }],
+            };
+        }
+
+        function generateRandomLineData() {
+            const labels = ['2018', '2019', '2020', '2021', '2022'];
+            const data = labels.map(() => Math.floor(Math.random() * 100));
+
+            return {
+                labels: labels,
+                datasets: [{
+                    label: 'Line Data',
+                    data: data,
+                    borderColor: '#00296b',
+                    backgroundColor: 'rgba(0, 0, 255, 0.2)',
+                }],
+            };
+        }
+
+        function generateRandomHeatmapData() {
+            const xLabels = ['X1', 'X2', 'X3', 'X4', 'X5'];
+            const yLabels = ['Y1', 'Y2', 'Y3', 'Y4', 'Y5'];
+            const data = [];
+            for (const xLabel of xLabels) {
+                for (const yLabel of yLabels) {
+                    data.push({
+                        x: xLabel,
+                        y: yLabel,
+                        v: Math.random(),
+                    });
+                }
+            }
+
+            return {
+                datasets: [{
+                    label: 'Value',
+                    data: data,
+                    backgroundColor: (context) => {
+                        const value = context.dataset.data[context.dataIndex].v;
+                        const alpha = value;
+                        return `rgba(0, 100, 0, ${alpha})`;
+                    },
+                    borderColor: (context) => {
+                        const value = context.dataset.data[context.dataIndex].v;
+                        const alpha = value;
+                        return `rgba(0, 75, 36, ${alpha})`;
+                    },
+                    borderWidth: 1,
+                    width: ({ chart }) => (chart.chartArea || {}).width / 5-1,
+                    height: ({ chart }) => (chart.chartArea || {}).height / 5-1,
+                }],
+                options: {
+                    plugins: {
+                    legend: false,
+                    tooltip: {
+                        callbacks: {
+                        title() {
+                            return '';
+                        },
+                        label(context) {
+                            const v = context.dataset.data[context.dataIndex];
+                            return ['x: ' + v.x, 'y: ' + v.y, 'v: ' + v.v];
+                        }
+                        }
+                    }
+                    },
+                    scales: {
+                        x: {
+                            type: 'category',
+                            labels: xLabels,
+                            ticks: {
+                            display: true
+                            },
+                            title:{
+                            text:"Records",
+                            display:true
+                            },
+                            grid: {
+                            display: false
+                            }
+                        },
+                        y: {
+                            type: 'category',
+                            labels: yLabels,
+                            offset: true,
+                            ticks: {
+                            display: true
+                            },
+                            grid: {
+                            display: false
+                            }
+                        }
+                    }
+                },
+            };
+        }
+
+        function generateRandomBoxplotData() {
+            function randomValues(count, min, max) {
+                const delta = max - min;
+                return Array.from({ length: count }).map(() => Math.random() * delta + min);
+            }
+            return {
+                labels: ["January", "February", "March", "April", "May", "June", "July"],
+                datasets: [
+                    {
+                    label: "Dataset 1",
+                    backgroundColor: getRandomColor(),
+                    padding: 10,
+                    itemRadius: 0,
+                    data: [
+                        randomValues(100, 0, 100),
+                        randomValues(100, 0, 20),
+                        randomValues(100, 20, 70),
+                        randomValues(100, 60, 100),
+                        randomValues(40, 50, 100),
+                        randomValues(100, 60, 120),
+                        randomValues(100, 80, 100)
+                    ]
+                    },
+                ]
             };
         }
 
@@ -168,9 +493,21 @@
                 ...defaultOptions,
                 ...customOptions,
             };
-            if(type === 'heatmap'){
+            if(type === 'Correlation Analysis'){
                 type = 'matrix';
                 options = data.options;
+            }else if(type === 'Distribution and Outliers'){
+                type = 'boxplot';
+            }else if(type === 'Distribution Analysis'){
+                type = 'pie';
+            }else if(type === 'Time Series or Trends'){
+                type = 'line';
+            }else if(type === 'Categorical Data Analysis'){
+                type = 'bar';
+            }else if(type === 'Linear Regression'){
+                type = 'scatter';
+            }else{
+                alert('Invailid Data Analysis Selection!');
             }
 
             chart = new Chart(ctx, {
@@ -192,28 +529,28 @@
             y = y.options[y.selectedIndex].value;
 
             // get chartData
-            if(chartType === 'scatter'){
+            if(chartType === 'Linear Regression'){
                 var xValues = Object.values(data[x]);
                 var yValues = Object.values(data[y]);
 
                 console.log("chart-type scatter");
                 chartData = linearRegData(xValues, yValues);
             }
-            else if(chartType === 'bar'){
+            else if(chartType === 'Categorical Data Analysis'){
                 console.log("chart-type bar");
                 chartData = categoricalData(data);
             }
-            else if(chartType === 'pie'){
+            else if(chartType === 'Distribution Analysis'){
                 chartData = quantitativeData(data);
             }
-            else if(chartType === 'line'){
+            else if(chartType === 'Time Series or Trends'){
                 chartData = timeOrTrendData(data, x, y);
             }
-            else if(chartType === 'heatmap'){
+            else if(chartType === 'Correlation Analysis'){
                 chartData = heatmapData(data, x, y);
                 console.log("Heat map triggered! ",chartType,chartData);
             }
-            else if(chartType === 'boxplot'){
+            else if(chartType === 'Distribution and Outliers'){
                 chartData = boxplotData(data, x, y);
             }else{
                 alert("Inalid Chart type!");
@@ -232,11 +569,13 @@
                     label: 'Linear Regression',
                     data: xValues.map((x, i) => ({ x, y: regression.equation[0] * x + regression.equation[1] })),
                     showLine: true,
-                    borderColor: 'blue',
+                    borderColor: '#00296b',
+                    pointRadius:6,
                 }, {
                     label: 'Data Points',
                     data: xValues.map((x, i) => ({ x, y: yValues[i] })),
-                    pointBackgroundColor: 'red',
+                    pointBackgroundColor: '#f5cb5c',
+                    pointRadius:6,
                 }],
             }
         }
@@ -259,13 +598,17 @@
                 });
             });
             
+            var colors = [];
+            Object.keys(data).forEach(()=>{
+                colors.push = getRandomColor();
+            })
 
             return {
                 labels: Object.keys(sums),
                 datasets: [{
                     label: 'Categorical Data',
                     data: Object.values(sums),
-                    backgroundColor: 'blue', // Customize the background color
+                    backgroundColor: colors, // Customize the background color
                 }],
             };
         }
@@ -284,12 +627,17 @@
 
             console.log("data set for quantitative analysis",labels,sums);
 
+            var colors = [];
+            Object.keys(data).forEach(()=>{
+                colors.push = getRandomColor();
+            })
+
             return {
                 labels: labels,
                 datasets: [{
                     label: "Quantative Data",
                     data: sums,
-                    backgroundColor: ['red', 'green', 'blue'],
+                    backgroundColor: colors,
                 }],
             }
         }
@@ -395,12 +743,12 @@
                     backgroundColor(context) {
                     const value = context.dataset.data[context.dataIndex].v;
                     const alpha = value;
-                    return 'rgba(0, 128, 0, ' + alpha + ')';
+                    return `rgba(0, 100, 0, ${alpha})`;
                     },
                     borderColor(context) {
                     const value = context.dataset.data[context.dataIndex].v;
                     const alpha = value;
-                    return 'rgba(0, 100, 0, ' + alpha + ')';
+                    return 'rgba(0, 75, 36, ' + alpha + ')';
                     },
                     borderWidth: 1,
                     width: ({chart}) => (chart.chartArea || {}).width / widthC,
@@ -517,6 +865,19 @@
                 // Create a FormData object and append the file data
                 var formData = new FormData();
                 formData.append('uploaded-file', event.target.files[0]);
+
+                const total = 90;
+                let progress = 0;
+                const progressBar = document.getElementById("file-upload-progress");
+
+                const interval = setInterval(() => {
+                    if (progress < total) {
+                        progress += 1;
+                        progressBar.style.width = progress + "%";
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 20);
     
                 // Send an AJAX request to your Django view to get cleaned data
                 $.ajax({
@@ -530,6 +891,8 @@
                     },
                     success: function(response) {
                         var data = JSON.parse(response.data);
+                        const progress = document.getElementById('file-upload-progress');
+                        progress.style.width='100%';
 
                         if (data) {
                             console.log(data); // Log the response.data
