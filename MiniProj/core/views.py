@@ -13,7 +13,7 @@ def main(request):
         if file:
             c_ins = Cleaning(file)
             clean = c_ins.cleaned_data()
-            print(clean)
+            # print(clean)
         return JsonResponse({'data': clean})
     
     return render(request, 'core/main.html',{
