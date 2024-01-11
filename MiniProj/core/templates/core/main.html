@@ -5,6 +5,9 @@
     <title>Main</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative&family=Cinzel:wght@400;500&family=Roboto+Flex:opsz,wght@8..144,100;8..144,200;8..144,300;8..144,400;8..144,500;8..144,600&family=Roboto+Mono:wght@200;400&family=Roboto+Serif:opsz,wght@8..144,200;8..144,300;8..144,500;8..144,600&family=Vollkorn:wght@400;800&family=Voltaire&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7"></script>
@@ -13,13 +16,31 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <style>
+
+/* good combinations for bg
+                       gradient                                 font
+
+background: linear-gradient(180deg, #CBD081 50%, #B1C1C0 50%); 'black'
+background: linear-gradient(180deg, #4C3B4D 50%, #6A706E 50%);  'both'
+background: linear-gradient(180deg, #220901 50%, #000 50%);     'white'
+background: linear-gradient(180deg, #14213d 50%, #30343f 50%);  'white'
+background: linear-gradient(180deg, #2d3142 50%, #4f5d75 50%);   'white'
+background: linear-gradient(180deg, #04151f 50%, #1b2021 50%);   'white'
+*/
     body {
-        background: linear-gradient(180deg, #7e6048 50%, #ad9e8f 50%);
-        color:black;
+        background: linear-gradient(180deg, #04151f 50%, #1b2021 50%);
+        color:white;
+        font-family: 'Roboto Flex', sans-serif;
+        font-weight: 300;
+        margin: 0;
+        /* background-attachment:fixed; */
     }
+    
 
     .bg-light-section {
         background-color: transparent;
+        background-attachment:fixed;
+        
     }
 
     .bg-light-section::before {
@@ -28,8 +49,9 @@
         top: 0;
         left: 0;
         width: 100%;
-        height: 33%;
-        background-color: #7e6048;
+        height: 50%;
+        background-color: #04151f;
+        /* background-color: #7e6048; */
         z-index: -1;
     }
 
@@ -39,55 +61,69 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 67%;
-        background-color: #ad9e8f;
+        height: 50%;
+        background-color: #1b2021;
         z-index: -1;
     }
+    .container{
+        border-bottom:2px dotted #183B11;
+    }
+
+    /* .inner-container {
+        padding: auto;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+    } */
     
-    .container-txt {
+.container-txt {
+    margin-top: 3%;
+    padding-top: 2%;
     position: relative;
     text-align: center;
+    white-space: nowrap;
 }
 
 .tag1, .tag2 {
-    padding: 10px 20px;
     display: inline-block;
+    white-space: nowrap;
 }
 
 .tag1 {
-    font-size: 46px; /* Match the font size of big-text */
+    font-size: 46px; 
     font-weight: bolder;
     font-stretch: expanded;
-    width: 100%;
-    line-height: 2.2;
-    padding-top: 15px;
-    padding-bottom: 10px;
+    font-family: 'Cinzel Decorative', sans-serif;
     color: #428a25;
-    transform: scaleY(3.5) scaleX(2.17);
+    transform: scaleY(3.5) scaleX(2.57);
     z-index: 1;
 }
 
 .tag2 {
-    font-size: 24px; /* Match the font size of small-text */
-    font-weight: 500; /* Match the font-weight of small-text */
-    color: #c5d7be;
+    font-size: 28px; 
+    font-weight: 500;
+    /* color: #183B11; */
     position: absolute;
+    text-wrap: wrap;
+    font-family: 'Roboto', serif;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 2;
+    z-index: 2; 
+    max-width: 100%;
+    text-overflow: ellipsis;
 }
 
 @media (max-width: 768px) {
-    .tag1, .tag2 { /* Adjust font size for smaller screens */
-        padding: 8px 16px; /* Adjust padding for smaller screens */
+    .tag1, .tag2 { 
+        padding: 4px 8px;
+        display: inline-block;
     }
     .tag1{
-        transform: scaleY(2.5) scaleX(1.17);
+        transform: scaleY(2.8) scaleX(1.17);
         font-size: 36px;
     }
     .tag2{
-        font-size: 12px;
+        font-size: 10px;
     }
 }
 
@@ -106,25 +142,53 @@
 .custom-file-icon {
     cursor: pointer;
 }
+.form-group select {
+    font-family: 'Roboto', sans-serif;
+}
 
 .form-control {
     background: inherit;
+    color: white;
+}
+
+#definition{
+    /* border-bottom: 1px dashed #183B11; */
+    font-family: 'Roboto Flex', sans-serif;
+    font-weight: 200;
+    font-stretch: condensed;
+}
+
+#chart{
+    border-top: 1px dashed #ccc;
 }
 
 
 </style>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var container = document.querySelector('body');
+
+        window.addEventListener('scroll', function () {
+            if (window.scrollY > 0) {
+                container.style.background = '#1b2021';
+            } else {
+                container.style.background = 'linear-gradient(180deg, #04151f 50%, #1b2021 50%)';
+            }
+        });
+    });
+</script>
 
 
 <body>
     <div class="container-txt">
-        <div class="tag1">VisualIntel</div>
-        <div class="tag2">Unlocking Insights through Data Visualization</div>
+        <div class="tag1 text-center">VISUALINTEL</div>
+        <div class="tag2 text-center">UNLOCKING INSIGHTS THROUGH DATA VISUALIZATION</div>
     </div>
     <section class="bg-light-section">
         <div class="container  py-4">
-            <h4 class="my-4 text-center w-100" id="definition">{{ clean }}</h4>
-            <div class="row mt-4">
+            <h3 class="my-3 text-center w-100" id="definition">{{ clean }}</h3>
+            <div class="inner-container row mt-4">
                 <div class="col-md-4">
                     <div class="d-flex align-items-center justify-content-center">
                         <form method="post" enctype="multipart/form-data" id="file-upload">
@@ -172,7 +236,7 @@
                         <p id="info"></p>
                     </div>
                 </div>
-                <div class="col-md-8">
+                <div class="chart-space col-md-8">
                     <canvas id="chart" class="w-100 rounded"></canvas>
                 </div>
             </div>
@@ -226,7 +290,8 @@
             "Distribution and Outliers": "Distribution and outliers analysis includes examining the distribution of data and identifying data points that deviate significantly from the norm."
         };
 
-
+        const chartOutline = 'white';
+        const outlineSie = 16; 
         var previousChart = null;
         let chartType = 'Linear Regression';
         let chartData = getRandomData(chartType);
@@ -288,7 +353,7 @@
         function generateRandomScatterData() {
             const x = [];
             const y = [];
-            for (let index = 0; index < 30; index++) {
+            for (let index = 0; index < 45; index++) {
                 x.push(Math.floor(Math.random() * 100));
             }
             for (let index = 0; index < x.length; index++) {
@@ -308,6 +373,7 @@
                     label: 'Data Points',
                     data: x.map((x, i) => ({ x, y: y[i] })),
                     pointBackgroundColor: '#f5cb5c',
+                    borderColor:'#f5cb5c',
                     pointRadius:6,
                 }],
             };
@@ -321,7 +387,7 @@
             return {
                 labels: labels,
                 datasets: [{
-                    label: 'Bar Data',
+                    label: 'Categories',
                     data: data,
                     backgroundColor: ['#694f5d','#68a691', '#bfd3c1', '#ffe5d4', '#efc7c2',],
                 }],
@@ -338,6 +404,9 @@
                     data: data,
                     backgroundColor: ['#694f5d','#68a691', '#bfd3c1', '#ffe5d4', '#efc7c2'],
                 }],
+                options:{
+                    aspectRatio: 1, 
+                }
             };
         }
 
@@ -408,14 +477,21 @@
                             type: 'category',
                             labels: xLabels,
                             ticks: {
-                            display: true
+                                color:chartOutline,
+                                font:{
+                                    size:outlineSie,
+                                },
+                                display: true
                             },
                             title:{
                             text:"Records",
-                            display:true
+                            display:true,
+                            color: chartOutline,
                             },
                             grid: {
-                            display: false
+                            display: false,
+                            borderColor:chartOutline,
+                            borderWidth:2,
                             }
                         },
                         y: {
@@ -423,10 +499,16 @@
                             labels: yLabels,
                             offset: true,
                             ticks: {
-                            display: true
+                                color:chartOutline,
+                                font:{
+                                    size:outlineSie,
+                                },
+                                display: true
                             },
                             grid: {
-                            display: false
+                            display: false,
+                            borderColor:chartOutline,
+                            borderWidth:2
                             }
                         }
                     }
@@ -469,20 +551,42 @@
 
             // Default chart options
             const defaultOptions = {
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: {
+                                size: 14,
+                                color:chartOutline,
+                            }
+                        }
+                    }
+                },
                 responsive: true,
                 scales: {
                     x: {
                         ticks: {
+                            color:chartOutline,
                             font: {
-                                size: 16,
+                                size: outlineSie,
                             },
+                        },
+                        grid : {
+                            display:false,
+                            borderWidth: 2,
+                            borderColor:chartOutline,
                         },
                     },
                     y: {
                         ticks: {
+                            color: chartOutline,
                             font: {
-                                size: 16,
+                                size: outlineSie,
                             },
+                        },
+                        grid : {
+                            display:false,
+                            borderWidth: 2,
+                            borderColor:chartOutline,
                         },
                     },
                 },
@@ -600,7 +704,7 @@
             
             var colors = [];
             Object.keys(data).forEach(()=>{
-                colors.push = getRandomColor();
+                colors.push(getRandomColor());
             })
 
             return {
@@ -608,7 +712,7 @@
                 datasets: [{
                     label: 'Categorical Data',
                     data: Object.values(sums),
-                    backgroundColor: colors, // Customize the background color
+                    backgroundColor: colors,
                 }],
             };
         }
@@ -629,7 +733,7 @@
 
             var colors = [];
             Object.keys(data).forEach(()=>{
-                colors.push = getRandomColor();
+                colors.push(getRandomColor());
             })
 
             return {
@@ -774,14 +878,21 @@
                             type: 'category',
                             labels: xLabels,
                             ticks: {
-                            display: true
+                                color:chartOutline,
+                                font:{
+                                    size:outlineSie,
+                                },
+                                display: true
                             },
                             title:{
                             text:"Records",
-                            display:true
+                            color: chartOutline,
+                            display:true,
                             },
                             grid: {
-                            display: false
+                            display: false,
+                            borderColor:chartOutline,
+                            borderWidth:2
                             }
                         },
                         y: {
@@ -789,10 +900,16 @@
                             labels: yLabels,
                             offset: true,
                             ticks: {
-                            display: true
+                                color:chartOutline,
+                                font:{
+                                    size:outlineSie,
+                                },
+                                display: true
                             },
                             grid: {
-                            display: false
+                            display: false,
+                            borderColor:chartOutline,
+                            borderWidth:2
                             }
                         }
                     }
@@ -866,9 +983,9 @@
                 var formData = new FormData();
                 formData.append('uploaded-file', event.target.files[0]);
 
-                const total = 90;
+                const total = 20;
                 let progress = 0;
-                const progressBar = document.getElementById("file-upload-progress");
+                let progressBar = document.getElementById("file-upload-progress");
 
                 const interval = setInterval(() => {
                     if (progress < total) {
@@ -877,7 +994,7 @@
                     } else {
                         clearInterval(interval);
                     }
-                }, 20);
+                }, 5);
     
                 // Send an AJAX request to your Django view to get cleaned data
                 $.ajax({
@@ -891,8 +1008,15 @@
                     },
                     success: function(response) {
                         var data = JSON.parse(response.data);
-                        const progress = document.getElementById('file-upload-progress');
-                        progress.style.width='100%';
+                        
+                        const interval2 = setInterval(() => {
+                            if (progress < 100) {
+                                progress += 1;
+                                progressBar.style.width = progress + "%";
+                            } else {
+                                clearInterval(interval2);
+                            }
+                        }, 1);
 
                         if (data) {
                             console.log(data); // Log the response.data
